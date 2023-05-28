@@ -1,7 +1,6 @@
 # DBProject---Deca21-Fedv21
 ---
 The *setup.sql* file contains the initial setup for the database.<br/>
-The *checkcart.sql* file contains source code for the procedure to check the cart.<br />
 
 The base users in the database are:<br />
 **Admin**: The email is **admin** and have the admin privliges in the python implementation<br />
