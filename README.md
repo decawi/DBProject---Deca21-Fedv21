@@ -11,7 +11,7 @@ The project.py file contains the initial conneection to the database and all big
 And imports **mysqlx**<br />
 
 The DBProject.py is the main python implementation. It uses the library **datetime** the get the date<br />
-the customer joined. It also uses the os library to clear the terminal for a easier user experience.<br />
+the customer joined. It also uses the **os** library to clear the terminal for a easier user experience.<br />
 Lastly it uses the **tabulate** library for nicer table outputs.<br />
 
 Youtube link for the demonstation video: [Here](https://youtu.be/ASfNCbWmsYk)
