@@ -1,5 +1,6 @@
 import mysqlx
 from mysqlx.errors import DatabaseError
+
 # Connect to server on localhost
 session = mysqlx.get_session({
     "host": "localhost",
@@ -11,24 +12,31 @@ session = mysqlx.get_session({
 DB_NAME = 'projekt'
 session.sql("USE {}".format(DB_NAME)).execute()
 
-cart_insert_trigger = "CREATE TRIGGER insert_into_cart AFTER INSERT ON customers " \
-        "FOR EACH ROW " \
-        " INSERT INTO cart (uniqueID, prodlist) VALUES (NEW.uniqueID, ''); " \
-        "UPDATE cart SET prodlist = 'new_product' " \
-        "WHERE uniqueID = (SELECT uniqueID FROM customers ORDER BY uniqueID DESC LIMIT 1);"
-
+cart_insert_trigger = """
+CREATE TRIGGER insert_into_cart AFTER INSERT ON customers
+FOR EACH ROW
+BEGIN
+    INSERT INTO cart (uniqueID, prodlist) VALUES (NEW.uniqueID, '');
+    UPDATE cart SET prodlist = '' WHERE uniqueID = (SELECT uniqueID FROM customers ORDER BY uniqueID DESC LIMIT 1);
+END;
+"""
 
 
 try:
-    session.sql(cart_insert_trigger).execute()
-except:
-    print("this trigger already exits")
+        print("Creating trigger insert_into_cart: ")
+        session.sql(cart_insert_trigger).execute()
+except DatabaseError as de:
+    if de.errno == 1050:
+        print("insert_into_cart already exists.")
+    else:
+        print(de.msg)
+else:
+    print("OK")
 
-
-cart_delete_trigger = "CREATE TRIGGER before_delete "\
-        "before delete on customers "\
-        "for each row "\
-        "delete from cart where uniqueID = old.uniqueID; "\
+cart_delete_trigger = """before_delete 
+before delete on customers
+for each row
+delete from cart where uniqueID = old.uniqueID;"""
         
 try:
     session.sql(cart_delete_trigger).execute()
@@ -95,23 +103,65 @@ create_check_cart = "DELIMITER // "\
 "   drop table realCart;"\
 "   drop table tempItemPrices;"\
 "END // "\
-"DELIMITER ;"
+"DELIMITER ;"\
 
 try:
-    session.sql(create_check_cart).execute()
-except:
-    print("this procedure already exits")
+        print("Creating trigger insert_into_cart: ")
+        session.sql(create_check_cart).execute()
+except DatabaseError as de:
+    if de.errno == 1304:
+        print("create cart already exists.")
+    else:
+        print(de.msg)
 
 
+create_check_fav = "DELIMITER // "\
+"CREATE PROCEDURE CheckFav(IN cartID INT) "\
+"BEGIN "\
+"    DECLARE prodItem VARCHAR(100); "\
+"    DECLARE done INT DEFAULT FALSE; "\
+"    DECLARE cursorFavItems CURSOR FOR "\
+"        SELECT favoriteProd FROM customers WHERE uniqueID = cartID;"\
+"    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE; "\
+"    CREATE TEMPORARY TABLE IF NOT EXISTS favorites ( "\
+"        item VARCHAR(100), "\
+"        price DECIMAL(10, 2) "\
+"    );"\
+"    OPEN cursorFavItems; "\
+"    read_loop: LOOP "\
+"        FETCH cursorFavItems INTO prodItem;"\
+"        IF done THEN"\
+"            LEAVE read_loop;"\
+"        END IF;"\
+"        WHILE LENGTH(prodItem) > 0 DO"\
+"            SET @pos := LOCATE(',', prodItem);"\
+"            IF @pos = 0 THEN"\
+"                SET @item := prodItem;"\
+"                SET prodItem := '';"\
+"            ELSE"\
+"                SET @item := SUBSTRING(prodItem, 1, @pos - 1);"\
+"                SET prodItem := SUBSTRING(prodItem, @pos + 1);"\
+"            END IF;"\
+"            SET @itemPrice := (SELECT price FROM inventory WHERE prodID = TRIM(@item));"\
+"            IF @itemPrice IS NOT NULL THEN"\
+"                INSERT INTO favorites (item, price) VALUES ((SELECT prodName FROM inventory WHERE prodID = TRIM(@item)), @itemPrice);"\
+"           END IF;"\
+"        END WHILE;"\
+"    END LOOP;"\
+"    CLOSE cursorFavItems;"\
+"   SELECT * FROM favorites;"\
+"    DROP TABLE IF EXISTS favorites;"\
+"END //"\
 
+try:
+        print("Creating trigger favt: ")
+        session.sql(create_check_cart).execute()
+except DatabaseError as de:
+    if de.errno == 1304:
+        print("create fav already exists.")
+    else:
+        print(de.msg)
 
-
-
-
-"""result = session.sql("select * from cart").execute()
-print("cart efter en delete i customer:\n")
-for customer in result.fetch_all():
-    print( customer)"""
 
 # query med JOIN
 mailing_list = "SELECT uniqueID, mail, discounts.prodName, discounts.discount " \
@@ -122,10 +172,13 @@ mailing_list = "SELECT uniqueID, mail, discounts.prodName, discounts.discount " 
         "or discounts.memberType = 'none' and customers.favoriteProd like concat('%',discounts.prodName,'%') " \
         "or discounts.memberType = 'none' and customers.favoritecategory like concat('%',discounts.category,'%'); " \
 
-mailing_list_result = session.sql(mailing_list).execute()
 
-"""for row in mailing_list_result.fetch_all():
-    print(row)"""
+
+discount_query = "SELECT discounts.prodName, discounts.discount "\
+"FROM customers "\
+"LEFT JOIN discounts "\
+"    ON discounts.memberType LIKE CONCAT('%', customers.memberType, '%') "\
+"    or discounts.memberType = 'none'"
 
 
 
