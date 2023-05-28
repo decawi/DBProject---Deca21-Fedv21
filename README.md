@@ -1,6 +1,6 @@
 # DBProject---Deca21-Fedv21
 ---
-The *basequeries.sql* file contains the initial setup for the database.<br/>
+The *setup.sql* file contains the initial setup for the database.<br/>
 The *checkcart.sql* file contains source code for the procedure to check the cart.<br />
 
 The base users in the database are:<br />
