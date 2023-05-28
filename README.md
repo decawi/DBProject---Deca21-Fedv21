@@ -9,6 +9,7 @@ The base users in the database are:<br />
 
 The project.py file contains the initial connection to the database and all bigger sql queries<br />
 And imports **mysqlx**<br />
+Some queries have had problems in the python implementation and might be needed to be run in sql beforehand.
 
 The DBProject.py is the main python implementation. It uses the library **datetime** the get the date<br />
 the customer joined. It also uses the **os** library to clear the terminal for a easier user experience.<br />
