@@ -7,7 +7,7 @@ The base users in the database are:<br />
 **Admin**: The email is **admin** and have the admin privliges in the python implementation<br />
 **Felix**: The email is **felix@mail.com** and it already have a cart with products in it.<br />
 
-The project.py file contains the initial conneection to the database and all bigger sql queries<br />
+The project.py file contains the initial connection to the database and all bigger sql queries<br />
 And imports **mysqlx**<br />
 
 The DBProject.py is the main python implementation. It uses the library **datetime** the get the date<br />
